@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>One More Book | Admin</title>
+<style>
+:root{--teal:#176F72;--orange:#FF7B29;--cream:#FDF4CB;--copper:#A7785A;--blue:#44889D;--white:#fff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--cream);color:var(--teal);font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;font-weight:600;line-height:1.4}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 20px;background:var(--white);border-bottom:4px solid var(--teal)}
+h1{margin:0;font-size:1.1rem}
+header button{white-space:nowrap;padding:8px 14px}
+main{max-width:760px;margin:0 auto;padding:20px 16px 60px}
+button{font:inherit;font-weight:800;cursor:pointer;border-radius:999px;border:3px solid var(--teal);padding:10px 20px;background:var(--teal);color:var(--cream);box-shadow:0 4px 0 var(--orange)}
+button.alt{background:var(--white);color:var(--teal)}
+button:disabled{opacity:.6;cursor:wait}
+input,select{font:inherit;width:100%;padding:10px 12px;border:3px solid var(--teal);border-radius:12px;background:var(--white);color:var(--teal)}
+label{display:block;font-size:.85rem;margin:10px 0 4px}
+.card{background:var(--white);border:3px solid var(--teal);border-radius:18px;padding:16px;margin:16px 0;box-shadow:6px 6px 0 var(--blue)}
+.card.new{box-shadow:6px 6px 0 var(--orange)}
+.card h2{margin:0 0 4px;font-size:1.1rem}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+.checks{display:flex;flex-wrap:wrap;gap:8px 22px;margin:12px 0}
+.checks label{display:flex;align-items:center;gap:8px;margin:0;font-size:1rem}
+.checks input{width:22px;height:22px;accent-color:var(--teal)}
+.row{display:flex;align-items:center;gap:12px;margin-top:14px}
+.row img{width:48px;height:64px;object-fit:cover;border-radius:8px;border:2px solid var(--teal)}
+.msg{font-size:.9rem;color:var(--copper)}
+.msg.err{color:var(--orange)}
+.hint{background:var(--white);border:3px dashed var(--copper);border-radius:14px;padding:12px 14px;font-size:.9rem;color:var(--copper)}
+#login{max-width:380px;margin:40px auto}
+#toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--teal);color:var(--cream);padding:10px 18px;border-radius:999px;border:3px solid var(--cream);opacity:0;pointer-events:none;transition:opacity .2s}
+#toast.show{opacity:1}
+@media(max-width:480px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <h1>One More Book | Admin</h1>
+  <button id="logout" class="alt" type="button" hidden>Log out</button>
+</header>
+<main>
+  <section id="login" class="card" hidden>
+    <h2>Log in</h2>
+    <form id="loginForm">
+      <label for="pw">Admin password</label>
+      <input id="pw" type="password" autocomplete="current-password" required>
+      <div class="row"><button type="submit">Log in</button><span id="loginMsg" class="msg err"></span></div>
+    </form>
+  </section>
+  <section id="panel" hidden>
+    <p class="hint">Changes show on the public site as soon as you press Save. Price and in-stock are saved now, but the public pages still show ₹100 until checkout is built. Leave Cover empty to keep the current picture. Use Hidden to take a book off the site.</p>
+    <button id="add" type="button">Add a new book</button>
+    <div id="list"></div>
+  </section>
+</main>
+<div id="toast" role="status" aria-live="polite"></div>
+<script>
+var AGES=["3-5","5-7","7-9"];
+var KINDS=[["picture","Picture book"],["story","Story book"],["activity","Activity book"]];
+function $(s,r){return (r||document).querySelector(s)}
+function el(tag,attrs,kids){
+  var e=document.createElement(tag);
+  for(var k in (attrs||{})){
+    if(k==="text")e.textContent=attrs[k];
+    else if(k==="value")e.value=attrs[k];
+    else if(k==="checked")e.checked=!!attrs[k];
+    else e.setAttribute(k,attrs[k]);
+  }
+  (kids||[]).forEach(function(c){e.appendChild(c)});
+  return e;
+}
+function api(method,path,body){
+  return fetch(path,{method:method,credentials:"same-origin",
+    headers:body?{"Content-Type":"application/json"}:{},
+    body:body?JSON.stringify(body):undefined
+  }).then(function(r){
+    return r.json().catch(function(){return {}}).then(function(d){return {ok:r.ok,status:r.status,data:d}});
+  });
+}
+var tt;
+function toast(msg){var t=$("#toast");t.textContent=msg;t.classList.add("show");clearTimeout(tt);tt=setTimeout(function(){t.classList.remove("show")},2800)}
+function show(loggedIn){
+  $("#login").hidden=loggedIn;$("#panel").hidden=!loggedIn;$("#logout").hidden=!loggedIn;
+}
+function field(label,input){var l=el("label",{text:label});l.appendChild(input);return l}
+function bookCard(b){
+  var isNew=!b.id;
+  var title=el("input",{type:"text",maxlength:"120",value:b.title||""});
+  var tag=el("input",{type:"text",maxlength:"200",value:b.tagline||""});
+  var age=el("select",{});AGES.forEach(function(a){age.appendChild(el("option",{value:a,text:"Ages "+a}))});age.value=b.age_group||"3-5";
+  var kind=el("select",{});KINDS.forEach(function(k){kind.appendChild(el("option",{value:k[0],text:k[1]}))});kind.value=b.kind||"picture";
+  var price=el("input",{type:"number",min:"1",step:"1",value:b.price||100});
+  var cover=el("input",{type:"text",placeholder:"https://... or covers/name.jpg",value:b.cover||""});
+  var stock=el("input",{type:"checkbox",checked:isNew?true:b.in_stock});
+  var hid=el("input",{type:"checkbox",checked:isNew?false:b.hidden});
+  var msg=el("span",{"class":"msg"});
+  var save=el("button",{type:"button",text:isNew?"Add book":"Save"});
+  var row=el("div",{"class":"row"},[save,msg]);
+  if(b.cover&&/^https:\/\//.test(b.cover)){row.insertBefore(el("img",{src:b.cover,alt:""}),save)}
+  var sl=el("label",{});sl.appendChild(stock);sl.appendChild(document.createTextNode("In stock"));
+  var hl=el("label",{});hl.appendChild(hid);hl.appendChild(document.createTextNode("Hidden"));
+  var card=el("div",{"class":"card"+(isNew?" new":"")},[
+    el("h2",{text:isNew?"New book":(b.title||"Book")}),
+    field("Title",title),field("Tagline",tag),
+    el("div",{"class":"grid"},[field("Age group",age),field("Kind",kind),field("Price (₹)",price),field("Cover (link)",cover)]),
+    el("div",{"class":"checks"},[sl,hl]),row
+  ]);
+  save.addEventListener("click",function(){
+    msg.className="msg";msg.textContent="";save.disabled=true;
+    var body={title:title.value,tagline:tag.value,age_group:age.value,kind:kind.value,price:price.value,cover:cover.value,in_stock:stock.checked,hidden:hid.checked};
+    var req=isNew?api("POST","/api/admin/books",body):api("PUT","/api/admin/books/"+b.id,body);
+    req.then(function(r){
+      save.disabled=false;
+      if(r.status===401){show(false);return}
+      if(!r.ok){msg.className="msg err";msg.textContent=r.data.error||"Could not save.";return}
+      toast("Saved.");load();
+    }).catch(function(){save.disabled=false;msg.className="msg err";msg.textContent="No connection. Try again."});
+  });
+  return card;
+}
+function load(){
+  api("GET","/api/admin/books").then(function(r){
+    if(r.status===401||r.status===503){
+      show(false);
+      if(r.status===503)$("#loginMsg").textContent=r.data.error;
+      return;
+    }
+    show(true);
+    var list=$("#list");list.textContent="";
+    (r.data||[]).forEach(function(b){list.appendChild(bookCard(b))});
+  });
+}
+$("#loginForm").addEventListener("submit",function(e){
+  e.preventDefault();var m=$("#loginMsg");m.textContent="";
+  api("POST","/api/admin/login",{password:$("#pw").value}).then(function(r){
+    if(!r.ok){m.textContent=r.data.error||"Could not log in.";return}
+    $("#pw").value="";load();
+  }).catch(function(){m.textContent="No connection. Try again."});
+});
+$("#logout").addEventListener("click",function(){api("POST","/api/admin/logout",{}).then(function(){show(false)})});
+$("#add").addEventListener("click",function(){var list=$("#list");list.insertBefore(bookCard({}),list.firstChild);window.scrollTo(0,list.offsetTop)});
+load();
+</script>
+</body>
+</html>

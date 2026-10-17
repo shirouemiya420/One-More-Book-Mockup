@@ -1,7 +1,16 @@
 {
-  "name": "one-more-book",
+  "name": "one-more-book-mockup",
+  "main": "worker.js",
   "compatibility_date": "2025-09-01",
   "assets": {
-    "directory": "./public/"
-  }
+    "directory": "./public/",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "one-more-book-db",
+      "database_id": "bb096d51-f53e-4ad2-a4d0-ff3cf7d433a2"
+    }
+  ]
 }

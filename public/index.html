@@ -217,7 +217,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
 .qty{display:flex;align-items:center;gap:8px;margin-top:4px}
 .qty button{width:30px;height:30px;border-radius:50%;border:2px solid var(--teal);background:var(--cream);color:var(--teal);font-weight:800;cursor:pointer;font-size:1.1rem;line-height:1}
 .qty b{min-width:2ch;text-align:center}
-.rm{border:0;background:none;color:var(--teal);text-decoration:underline;cursor:pointer;font:inherit;font-size:.85rem;padding:4px}
+.qty .rm,.rm{width:auto;height:auto;border:0;border-radius:0;background:none;color:var(--teal);text-decoration:underline;cursor:pointer;font:inherit;font-size:.85rem;font-weight:600;line-height:1.2;padding:4px}
 .d-foot{padding:16px 20px;border-top:3px solid var(--teal);background:var(--white);display:grid;gap:10px}
 .d-foot .total{margin:0;border:0;padding:0}
 .d-foot input{width:100%}
@@ -702,6 +702,22 @@ $("#sort").addEventListener("change",function(){sortBy=this.value;renderShop()})
 /* ---- Go ---- */
 $("#yr").textContent="© "+new Date().getFullYear();
 renderChips();renderShop();renderAges();renderShelf();renderPack();renderFinder();renderCart();
+
+/* ---- Load the books from the database. If this fails, the list above is used. ---- */
+fetch("/api/books",{cache:"no-store"}).then(function(r){return r.ok?r.json():Promise.reject()}).then(function(rows){
+  if(!rows||!rows.length)return;
+  var old={};BOOKS.forEach(function(b){old[b.id]=b});
+  BOOKS=rows.map(function(r){
+    var o=old[r.id]||{};
+    return {id:r.id,title:r.title,short:o.short||r.title,
+      kind:KINDS[r.kind]?r.kind:(o.kind||"story"),
+      age:AGES[r.age_group]?r.age_group:(o.age||"3-5"),
+      tag:r.tagline||o.tag||"",img:r.cover||o.img||""};
+  });
+  for(var k in cart){if(!byId(k))delete cart[k]}
+  if(!byId(shelfSel))shelfSel=BOOKS[0].id;
+  save();renderShop();renderAges();renderShelf();renderFinder();renderCart();
+}).catch(function(){});
 </script>
 </body>
 </html>

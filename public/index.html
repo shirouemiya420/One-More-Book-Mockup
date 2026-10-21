@@ -674,10 +674,11 @@ function packList(){
   return BOOKS.filter(function(b){return a==="all"||b.age===a});
 }
 function renderPack(){
-  var g=+$("#guests").value;
+ var g=+$("#guests").value,list=packList(),base=Math.floor(g/list.length),rem=g%list.length,t=0,same=true;
+  list.forEach(function(b,i){t+=(base+(i<rem?1:0))*pr(b);if(pr(b)!==pr(list[0]))same=false});
   $("#guestsOut").textContent=g;
-  $("#packNote").textContent=g+" books at "+money(PRICE);
-  $("#packTotal").textContent=money(g*PRICE);
+  $("#packNote").textContent=same?g+" books at "+money(pr(list[0])):g+" books, mixed prices";
+  $("#packTotal").textContent=money(t);
 }
 $("#guests").addEventListener("input",renderPack);
 $("#packAge").addEventListener("change",renderPack);
@@ -747,7 +748,7 @@ fetch("/api/books",{cache:"no-store"}).then(function(r){return r.ok?r.json():Pro
   });
   for(var k in cart){if(!byId(k))delete cart[k]}
   if(!byId(shelfSel))shelfSel=BOOKS[0].id;
-  save();renderShop();renderAges();renderShelf();renderFinder();renderCart();
+   save();renderShop();renderAges();renderShelf();renderFinder();renderPack();renderCart();
 }).catch(function(){});
 </script>
 </body>

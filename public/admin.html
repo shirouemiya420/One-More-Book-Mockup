@@ -54,6 +54,9 @@ label{display:block;font-size:.85rem;margin:10px 0 4px}
     <p class="hint">Changes show on the public site as soon as you press Save. Price and in-stock are saved now, but the public pages still show ₹100 until checkout is built. Leave Cover empty to keep the current picture. Use Hidden to take a book off the site.</p>
     <button id="add" type="button">Add a new book</button>
     <div id="list"></div>
+    <h1 style="margin-top:36px">Orders</h1>
+    <p class="hint">Latest 100 orders. Only <b>paid</b> orders are confirmed payments.</p>
+    <div id="orders"></div>
   </section>
 </main>
 <div id="toast" role="status" aria-live="polite"></div>
@@ -121,6 +124,25 @@ function bookCard(b){
   });
   return card;
 }
+function loadOrders(){
+  api("GET","/api/admin/orders").then(function(r){
+    var box=$("#orders");box.textContent="";
+    if(!r.ok){return}
+    if(!r.data.length){box.appendChild(el("p",{"class":"msg",text:"No orders yet."}));return}
+    r.data.forEach(function(o){
+      var items=[];try{items=JSON.parse(o.items)}catch(e){}
+      var lines=items.map(function(i){return el("div",{text:i.qty+" x "+i.title+" (₹"+i.price+")"})});
+      box.appendChild(el("div",{"class":"card"+(o.status==="paid"?"":" new")},[
+        el("h2",{text:"Order #"+o.id+" | "+o.status.toUpperCase()+" | ₹"+o.total}),
+        el("div",{"class":"msg",text:o.created_at+" UTC"}),
+        el("div",{text:o.name+" | "+o.phone}),
+        el("div",{text:o.address}),
+        el("div",{"class":"msg"},lines),
+        el("div",{"class":"msg",text:o.razorpay_payment_id?("Payment: "+o.razorpay_payment_id):"No payment yet"})
+      ]));
+    });
+  });
+}
 function load(){
   api("GET","/api/admin/books").then(function(r){
     if(r.status===401||r.status===503){
@@ -131,6 +153,7 @@ function load(){
     show(true);
     var list=$("#list");list.textContent="";
     (r.data||[]).forEach(function(b){list.appendChild(bookCard(b))});
+    loadOrders();
   });
 }
 $("#loginForm").addEventListener("submit",function(e){

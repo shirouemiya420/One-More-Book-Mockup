@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>One More Book | Children's books, every one ₹100</title>
-<meta name="description" content="One More Book is a children's bookstore where every book is ₹100. Browse by age, build a birthday return-gift pack, and order on WhatsApp.">
+<meta name="description" content="One More Book is a children's bookstore where every book is ₹100. Browse by age, build a birthday return-gift pack, and pay securely online.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23176F72'/%3E%3Crect x='14' y='38' width='36' height='8' rx='3' fill='%23FF7B29'/%3E%3Crect x='18' y='28' width='32' height='8' rx='3' fill='%23FDF4CB'/%3E%3Crect x='12' y='18' width='34' height='8' rx='3' fill='%2344889D'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -98,7 +98,7 @@ section[id]{scroll-margin-top:76px}
 .chip{font-family:var(--display);font-weight:600;font-size:1rem;padding:9px 18px;border-radius:999px;border:3px solid var(--teal);background:var(--white);color:var(--teal);cursor:pointer}
 .chip[aria-pressed="true"]{background:var(--teal);color:var(--cream)}
 .sort{margin-left:auto;display:flex;align-items:center;gap:8px;font-weight:800}
-select,input[type=text]{font:inherit;font-weight:700;color:var(--teal);background:var(--white);border:3px solid var(--teal);border-radius:12px;padding:9px 12px}
+select,input[type=text],input[type=tel]{font:inherit;font-weight:700;color:var(--teal);background:var(--white);border:3px solid var(--teal);border-radius:12px;padding:9px 12px}
 
 /* cards + covers */
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(212px,1fr));gap:24px}
@@ -221,6 +221,8 @@ footer .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
 .d-foot{padding:16px 20px;border-top:3px solid var(--teal);background:var(--white);display:grid;gap:10px}
 .d-foot .total{margin:0;border:0;padding:0}
 .d-foot input{width:100%}
+.d-foot textarea{width:100%;font:inherit;font-weight:700;color:var(--teal);background:var(--white);border:3px solid var(--teal);border-radius:12px;padding:9px 12px;resize:vertical;min-height:72px}
+.btn:disabled{opacity:.6;cursor:wait}
 .d-foot .two-btn{display:grid;grid-template-columns:1fr;gap:12px;margin-top:4px}
 .small{font-size:.9rem}
 
@@ -289,7 +291,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
     <div class="wrap hero-in">
       <div>
         <h1>One more book, <span>please.</span></h1>
-        <p class="lead">Hand-picked children's books, every one ₹100. Fill a bag, send it to us on WhatsApp, and we'll confirm delivery with you there.</p>
+        <p class="lead">Hand-picked children's books, every one ₹100. Fill a bag, pay securely online, and we'll confirm delivery with you.</p>
         <div class="cta">
           <a class="btn" href="#books">Shop books</a>
           <a class="btn alt" href="#gifts">Plan a birthday pack</a>
@@ -450,7 +452,7 @@ footer .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
     <div class="wrap contact">
       <div>
         <h2>Contact / WhatsApp</h2>
-        <p class="sub">Ask about a title, plan a party order or join the club. Your bag turns into a ready-to-send message in one tap.</p>
+        <p class="sub">Ask about a title, plan a party order or join the club.</p>
         <div class="links">
           <a class="btn" href="#contact" data-wa="Hi One More Book! I have a question.">Chat on WhatsApp</a>
           <a class="ig" id="igLink" href="https://www.instagram.com/onemorebookofficial" target="_blank" rel="noopener">@onemorebookofficial on Instagram</a>
@@ -458,8 +460,8 @@ footer .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
       </div>
       <ol class="how">
         <li>Browse the shelves and add books to your bag.</li>
-        <li>Send your bag to us on WhatsApp.</li>
-        <li>We confirm the books and delivery details.</li>
+        <li>Pay securely online with Razorpay.</li>
+        <li>We confirm your order and delivery details.</li>
         <li>Open the parcel, read, repeat.</li>
       </ol>
     </div>
@@ -479,12 +481,12 @@ footer .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
   <div class="d-body" id="dBody"></div>
   <div class="d-foot">
     <div class="total"><span>Total</span><b id="dTotal">₹0</b></div>
-    <input type="text" id="cName" placeholder="Your name" aria-label="Your name" autocomplete="name">
-    <input type="text" id="cArea" placeholder="Delivery area or pincode" aria-label="Delivery area or pincode">
-    <p class="small">Your order is sent as a WhatsApp message. We confirm prices and delivery with you there.</p>
+    <input type="text" id="cName" placeholder="Your name" aria-label="Your name" autocomplete="name" maxlength="100">
+    <input type="tel" id="cPhone" placeholder="Phone number" aria-label="Phone number" autocomplete="tel" inputmode="tel" maxlength="20">
+    <textarea id="cAddr" placeholder="Full delivery address with pincode" aria-label="Delivery address" autocomplete="street-address" maxlength="400"></textarea>
+    <p class="small">You pay securely with Razorpay (UPI, cards, netbanking). We never see your card details.</p>
     <div class="two-btn">
-      <button class="btn" id="sendWa" type="button">Order on WhatsApp</button>
-      <button class="btn alt" id="copyOrder" type="button">Copy order text</button>
+      <button class="btn" id="payBtn" type="button">Pay with Razorpay</button>
     </div>
   </div>
 </aside>
@@ -495,6 +497,8 @@ footer .wrap{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
 var WHATSAPP_NUMBER = "";   /* country code + number, digits only, e.g. "919876543210" */
 var INSTAGRAM_URL   = "https://www.instagram.com/onemorebookofficial";
 var PRICE = 100;
+function pr(b){return b&&b.price>0?b.price:PRICE}
+function cartTotal(){var t=0;for(var k in cart){var b=byId(k);if(b&&cart[k]>0)t+=cart[k]*pr(b)}return t}
 
 /* ---- Books. Ages, kinds and taglines are placeholders until the client confirms.
         The covers are the low-resolution crops from the Instagram screenshot. To swap in real photos,
@@ -526,7 +530,7 @@ function cover(b){
 }
 function card(b){
   return '<article class="card">'+cover(b)+'<h3>'+esc(b.title)+'</h3><p class="tag">'+esc(b.tag)+'</p>'+
-    '<div class="meta"><span class="pill">Ages '+AGES[b.age].label+'</span><span class="price">'+money(PRICE)+'</span></div>'+
+    '<div class="meta"><span class="pill">Ages '+AGES[b.age].label+'</span><span class="price">'+money(pr(b))+'</span></div>'+
     '<button class="btn sm" type="button" data-add="'+b.id+'">Add to bag</button></article>';
 }
 
@@ -545,7 +549,7 @@ try{
 }catch(e){}
 function save(){try{localStorage.setItem("omb-cart",JSON.stringify(cart))}catch(e){}}
 function count(){var n=0;for(var k in cart)n+=cart[k];return n}
-function addToCart(id,n){cart[id]=Math.min(99,(cart[id]||0)+(n||1));save();renderCart();bump()}
+function addToCart(id,n){var bk=byId(id);if(bk&&bk.in_stock===0){toast(bk.title+" is sold out.");return false}cart[id]=Math.min(99,(cart[id]||0)+(n||1));save();renderCart();bump();return true}
 function bump(){var b=$("#bagBtn");b.classList.remove("bump");void b.offsetWidth;b.classList.add("bump")}
 function renderCart(){
   $("#bagCount").textContent=count();
@@ -559,43 +563,64 @@ function renderCart(){
       return '<div class="line">'+cover(b)+'<div class="i"><h4>'+esc(b.title)+'</h4><div class="qty">'+
         '<button type="button" data-dec="'+k+'" aria-label="One fewer '+esc(b.title)+'">&minus;</button><b>'+q+'</b>'+
         '<button type="button" data-inc="'+k+'" aria-label="One more '+esc(b.title)+'">+</button>'+
-        '<button class="rm" type="button" data-rm="'+k+'">Remove</button></div></div><b>'+money(q*PRICE)+'</b></div>';
+        '<button class="rm" type="button" data-rm="'+k+'">Remove</button></div></div><b>'+money(q*pr(b))+'</b></div>';
     }).join("");
   }
-  $("#dTotal").textContent=money(count()*PRICE);
-}
-function orderText(){
-  var lines=["Hi One More Book! I'd like to order:"];
-  Object.keys(cart).forEach(function(k){
-    if(cart[k]>0){var b=byId(k);lines.push("- "+b.title+" x "+cart[k]+" = "+money(cart[k]*PRICE))}
-  });
-  lines.push("Total: "+money(count()*PRICE));
-  var n=$("#cName").value.trim(),a=$("#cArea").value.trim();
-  if(n)lines.push("Name: "+n);
-  if(a)lines.push("Delivery area: "+a);
-  return lines.join("\n");
+  $("#dTotal").textContent=money(cartTotal());
 }
 function number(){return String(WHATSAPP_NUMBER||"").replace(/\D/g,"")}
 function waURL(text){return number()?"https://wa.me/"+number()+"?text="+encodeURIComponent(text):""}
-var NO_NUMBER="WhatsApp ordering opens soon. For now, tap Copy order text and send it to us.";
 
-$("#sendWa").addEventListener("click",function(){
+/* ---- Checkout (Razorpay) ---- */
+var paying=false;
+function loadRazorpay(){
+  return new Promise(function(resolve,reject){
+    if(window.Razorpay)return resolve();
+    var s=document.createElement("script");s.src="https://checkout.razorpay.com/v1/checkout.js";
+    s.onload=function(){resolve()};s.onerror=function(){reject()};document.head.appendChild(s);
+  });
+}
+function postJSON(url,body){
+  return fetch(url,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}).then(function(r){
+    return r.json().catch(function(){return {}}).then(function(d){return {ok:r.ok,data:d}});
+  });
+}
+function setPaying(on){paying=on;var b=$("#payBtn");b.disabled=on;b.textContent=on?"Please wait...":"Pay with Razorpay"}
+function showThanks(orderId,phone){
+  cart={};save();renderCart();
+  $("#dBody").innerHTML='<div class="empty"><b>Thank you!</b>Your order #'+esc(String(orderId))+' is paid. We will message you on '+esc(phone)+' about delivery.</div>';
+}
+$("#payBtn").addEventListener("click",function(){
+  if(paying)return;
   if(!count()){toast("Add a book to your bag first.");return}
-  var u=waURL(orderText());
-  if(!u){toast(NO_NUMBER);return}
-  window.open(u,"_blank","noopener");
-});
-$("#copyOrder").addEventListener("click",function(){
-  if(!count()){toast("Add a book to your bag first.");return}
-  var t=orderText();
-  function done(){toast("Order text copied.")}
-  function fallback(){
-    var ta=document.createElement("textarea");ta.value=t;ta.style.position="fixed";ta.style.opacity="0";
-    document.body.appendChild(ta);ta.select();
-    try{document.execCommand("copy");done()}catch(e){toast("Couldn't copy. Select the text and copy it yourself.")}
-    document.body.removeChild(ta);
-  }
-  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,fallback)}else{fallback()}
+  var name=$("#cName").value.trim(),phone=$("#cPhone").value.trim(),addr=$("#cAddr").value.trim();
+  if(name.length<2){toast("Please enter your name.");$("#cName").focus();return}
+  if(phone.replace(/\D/g,"").length<10){toast("Please enter a phone number with at least 10 digits.");$("#cPhone").focus();return}
+  if(addr.length<10){toast("Please enter your full delivery address.");$("#cAddr").focus();return}
+  var items=Object.keys(cart).filter(function(k){return cart[k]>0}).map(function(k){return {id:Number(k),qty:cart[k]}});
+  setPaying(true);
+  Promise.all([loadRazorpay(),postJSON("/api/checkout",{name:name,phone:phone,address:addr,items:items})]).then(function(res){
+    var r=res[1];
+    if(!r.ok){setPaying(false);toast(r.data.error||"Could not start payment. Please try again.");return}
+    var d=r.data;
+    var rz=new window.Razorpay({
+      key:d.keyId,amount:d.amount,currency:d.currency,order_id:d.razorpayOrderId,
+      name:"One More Book",description:"Order #"+d.orderId,
+      prefill:{name:name,contact:phone},theme:{color:"#176F72"},
+      modal:{ondismiss:function(){setPaying(false)}},
+      handler:function(resp){
+        postJSON("/api/verify",{razorpay_order_id:resp.razorpay_order_id,razorpay_payment_id:resp.razorpay_payment_id,razorpay_signature:resp.razorpay_signature}).then(function(v){
+          setPaying(false);
+          if(v.ok){showThanks(d.orderId,phone)}
+          else{$("#dBody").innerHTML='<div class="empty"><b>We received your payment</b>but could not confirm it here. Please contact us and quote this payment ID: '+esc(String(resp.razorpay_payment_id))+'</div>'}
+        }).catch(function(){
+          setPaying(false);
+          $("#dBody").innerHTML='<div class="empty"><b>We received your payment</b>but could not confirm it here. Please contact us and quote this payment ID: '+esc(String(resp.razorpay_payment_id))+'</div>';
+        });
+      }
+    });
+    rz.open();
+  }).catch(function(){setPaying(false);toast("Could not start payment. Check your connection and try again.")});
 });
 
 /* general WhatsApp links */
@@ -640,7 +665,7 @@ function renderShelf(){
     return '<button class="spine '+colors[(b.id-1)%5]+'" type="button" data-spine="'+b.id+'" aria-pressed="'+(shelfSel===b.id)+'" style="height:'+h+'px">'+esc(b.short)+'</button>';
   }).join("");
   var b=byId(shelfSel);
-  $("#pick").innerHTML=cover(b)+'<div><h3>'+esc(b.title)+'</h3><p>'+esc(b.tag)+' Ages '+AGES[b.age].label+', '+KINDS[b.kind].toLowerCase()+'. '+money(PRICE)+'.</p><button class="btn sm" type="button" data-add="'+b.id+'">Add to bag</button></div>';
+  $("#pick").innerHTML=cover(b)+'<div><h3>'+esc(b.title)+'</h3><p>'+esc(b.tag)+' Ages '+AGES[b.age].label+', '+KINDS[b.kind].toLowerCase()+'. '+money(pr(b))+'.</p><button class="btn sm" type="button" data-add="'+b.id+'">Add to bag</button></div>';
 }
 
 /* ---- Gifts ---- */
@@ -670,7 +695,7 @@ function renderFinder(){
     msg='<p class="note">No '+KINDS[kind].toLowerCase()+' for this age yet. Here is what we have for ages '+AGES[age].label+'.</p>';
   }
   $("#finder").innerHTML=msg+list.slice(0,3).map(function(b){
-    return '<div class="mini">'+cover(b)+'<div class="i"><h4>'+esc(b.title)+'</h4><small>'+KINDS[b.kind]+', '+money(PRICE)+'</small></div><button class="btn sm" type="button" data-add="'+b.id+'">Add</button></div>';
+    return '<div class="mini">'+cover(b)+'<div class="i"><h4>'+esc(b.title)+'</h4><small>'+KINDS[b.kind]+', '+money(pr(b))+'</small></div><button class="btn sm" type="button" data-add="'+b.id+'">Add</button></div>';
   }).join("");
 }
 $("#fAge").addEventListener("change",renderFinder);
@@ -694,7 +719,7 @@ $("#nav").addEventListener("click",function(e){if(e.target.closest("a")){$("#nav
 /* ---- Clicks ---- */
 document.addEventListener("click",function(e){
   var t;
-  if((t=e.target.closest("[data-add]"))){var id=t.getAttribute("data-add");addToCart(id,1);toast("Added "+byId(id).title+" to your bag.");return}
+  if((t=e.target.closest("[data-add]"))){var id=t.getAttribute("data-add");if(addToCart(id,1))toast("Added "+byId(id).title+" to your bag.");return}
   if((t=e.target.closest("[data-inc]"))){addToCart(t.getAttribute("data-inc"),1);return}
   if((t=e.target.closest("[data-dec]"))){var k=t.getAttribute("data-dec");cart[k]=(cart[k]||0)-1;if(cart[k]<=0)delete cart[k];save();renderCart();return}
   if((t=e.target.closest("[data-rm]"))){delete cart[t.getAttribute("data-rm")];save();renderCart();return}
@@ -718,7 +743,7 @@ fetch("/api/books",{cache:"no-store"}).then(function(r){return r.ok?r.json():Pro
     return {id:r.id,title:r.title,short:o.short||r.title,
       kind:KINDS[r.kind]?r.kind:(o.kind||"story"),
       age:AGES[r.age_group]?r.age_group:(o.age||"3-5"),
-      tag:r.tagline||o.tag||"",img:r.cover||o.img||""};
+      tag:r.tagline||o.tag||"",img:r.cover||o.img||"",price:r.price>0?r.price:100,in_stock:r.in_stock};
   });
   for(var k in cart){if(!byId(k))delete cart[k]}
   if(!byId(shelfSel))shelfSel=BOOKS[0].id;

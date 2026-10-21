@@ -123,6 +123,13 @@ async function handleAdmin(request, env, url) {
     return json(results);
   }
 
+  if (path === "/api/admin/orders" && request.method === "GET") {
+    const { results } = await env.DB.prepare(
+      "SELECT id, created_at, name, phone, address, items, total, status, razorpay_payment_id FROM orders ORDER BY id DESC LIMIT 100"
+    ).all();
+    return json(results);
+  }
+
   if (path === "/api/admin/books" && request.method === "POST") {
     let body;
     try { body = await request.json(); } catch (e) { return json({ error: "Bad request." }, 400); }
@@ -153,6 +160,113 @@ async function handleAdmin(request, env, url) {
   return json({ error: "Not found." }, 404);
 }
 
+
+const MAX_ITEMS = 20;
+
+async function createRazorpayOrder(env, amountPaise, receipt, orderId) {
+  const auth = btoa(env.RAZORPAY_KEY_ID + ":" + env.RAZORPAY_KEY_SECRET);
+  const res = await fetch("https://api.razorpay.com/v1/orders", {
+    method: "POST",
+    headers: { Authorization: "Basic " + auth, "Content-Type": "application/json" },
+    body: JSON.stringify({ amount: amountPaise, currency: "INR", receipt, notes: { order_id: String(orderId) } }),
+  });
+  if (!res.ok) return null;
+  return await res.json();
+}
+
+async function handlePayments(request, env, url) {
+  if (request.method !== "POST") return json({ error: "Not found." }, 404);
+  if (!env.RAZORPAY_KEY_ID || !env.RAZORPAY_KEY_SECRET) {
+    return json({ error: "Checkout is not set up yet." }, 503);
+  }
+  const origin = request.headers.get("Origin");
+  if (origin && origin !== url.origin) return json({ error: "Not allowed." }, 403);
+  if (!(request.headers.get("Content-Type") || "").includes("application/json")) {
+    return json({ error: "Bad request." }, 415);
+  }
+  let body;
+  try { body = await request.json(); } catch (e) { return json({ error: "Bad request." }, 400); }
+  if (!body || typeof body !== "object") return json({ error: "Bad request." }, 400);
+
+  if (url.pathname === "/api/checkout") {
+    const name = String(body.name || "").trim();
+    const phone = String(body.phone || "").replace(/\D/g, "");
+    const address = String(body.address || "").trim();
+    if (name.length < 2 || name.length > 100) return json({ error: "Please enter your name." }, 400);
+    if (phone.length < 10 || phone.length > 15) return json({ error: "Please enter a valid phone number." }, 400);
+    if (address.length < 10 || address.length > 400) return json({ error: "Please enter your full delivery address." }, 400);
+
+    if (!Array.isArray(body.items) || body.items.length === 0 || body.items.length > MAX_ITEMS) {
+      return json({ error: "Your bag is empty." }, 400);
+    }
+    const wanted = new Map();
+    for (const it of body.items) {
+      const id = Number(it && it.id);
+      const qty = Number(it && it.qty);
+      if (!Number.isInteger(id) || id < 1 || !Number.isInteger(qty) || qty < 1 || qty > 99) {
+        return json({ error: "Something is wrong with your bag." }, 400);
+      }
+      wanted.set(id, Math.min(99, (wanted.get(id) || 0) + qty));
+    }
+    const ids = [...wanted.keys()];
+    const marks = ids.map(() => "?").join(",");
+    const { results } = await env.DB.prepare(
+      `SELECT id, title, price, in_stock, hidden FROM books WHERE id IN (${marks})`
+    ).bind(...ids).all();
+    if (results.length !== ids.length) return json({ error: "A book in your bag is no longer available." }, 400);
+
+    const lines = [];
+    let total = 0;
+    for (const r of results) {
+      if (r.hidden || !r.in_stock) return json({ error: r.title + " is sold out." }, 400);
+      const qty = wanted.get(r.id);
+      lines.push({ id: r.id, title: r.title, qty, price: r.price });
+      total += qty * r.price;
+    }
+    if (!Number.isInteger(total) || total < 1 || total > 100000) {
+      return json({ error: "This order total is not allowed." }, 400);
+    }
+
+    const ins = await env.DB.prepare(
+      "INSERT INTO orders (name, phone, address, items, total, status) VALUES (?, ?, ?, ?, ?, 'created')"
+    ).bind(name, phone, address, JSON.stringify(lines), total).run();
+    const orderId = ins.meta.last_row_id;
+
+    const rz = await createRazorpayOrder(env, total * 100, "omb_" + orderId, orderId);
+    if (!rz || !rz.id) {
+      await env.DB.prepare("UPDATE orders SET status = 'failed' WHERE id = ?").bind(orderId).run();
+      return json({ error: "Could not start payment. Please try again." }, 502);
+    }
+    await env.DB.prepare("UPDATE orders SET razorpay_order_id = ? WHERE id = ?").bind(rz.id, orderId).run();
+    return json({ orderId, razorpayOrderId: rz.id, amount: total * 100, currency: "INR", keyId: env.RAZORPAY_KEY_ID });
+  }
+
+  if (url.pathname === "/api/verify") {
+    const rzOrder = String(body.razorpay_order_id || "");
+    const rzPay = String(body.razorpay_payment_id || "");
+    const rzSig = String(body.razorpay_signature || "");
+    if (!/^order_[A-Za-z0-9]+$/.test(rzOrder) || !/^pay_[A-Za-z0-9]+$/.test(rzPay) || !/^[a-f0-9]{64}$/.test(rzSig)) {
+      return json({ error: "Payment could not be verified." }, 400);
+    }
+    const order = await env.DB.prepare(
+      "SELECT id, status FROM orders WHERE razorpay_order_id = ?"
+    ).bind(rzOrder).first();
+    if (!order) return json({ error: "Order not found." }, 404);
+
+    const expected = await hmac(env.RAZORPAY_KEY_SECRET, rzOrder + "|" + rzPay);
+    if (!safeEqual(rzSig, expected)) return json({ error: "Payment could not be verified." }, 400);
+
+    if (order.status !== "paid") {
+      await env.DB.prepare(
+        "UPDATE orders SET status = 'paid', razorpay_payment_id = ? WHERE id = ? AND status = 'created'"
+      ).bind(rzPay, order.id).run();
+    }
+    return json({ ok: true, orderId: order.id });
+  }
+
+  return json({ error: "Not found." }, 404);
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -162,6 +276,14 @@ export default {
         "SELECT id, title, tagline, age_group, kind, price, cover, in_stock FROM books WHERE hidden = 0 ORDER BY sort_order, id"
       ).all();
       return json(results);
+    }
+
+    if (url.pathname === "/api/checkout" || url.pathname === "/api/verify") {
+      try {
+        return await handlePayments(request, env, url);
+      } catch (e) {
+        return json({ error: "Something went wrong." }, 500);
+      }
     }
 
     if (url.pathname.startsWith("/api/admin/")) {
